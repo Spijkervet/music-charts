@@ -44,8 +44,8 @@ if __name__ == "__main__":
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
 
-    CHART = os.path.join(DATA_DIR, "historical_chart.csv")
-    BLACKLIST = os.path.join(DATA_DIR, "blacklist.csv")
+    CHART = os.path.join(DATA_DIR, "historical_chart_viral.csv")
+    BLACKLIST = os.path.join(DATA_DIR, "blacklist_viral.csv")
 
     start_date = date(2017, 1, 1)
     end_date = datetime.now().date()
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         "za": "South Africa",
     }
 
-    charts = ["regional"]
+    charts = ["regional", "viral"]
     chart_type = "daily"
 
     print("Reading stream file")
