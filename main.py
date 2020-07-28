@@ -123,8 +123,9 @@ def add_chart_entries(data):
 if __name__ == "__main__":
     chart_ids, region_ids = populate_tables()
 
-    start_date = date(2017, 1, 1)
-    daily_dates = get_dates(start_date)
+    daily_dates = get_dates(date(2017, 1, 1))
+    weekly_dates = [d for d in get_dates(date(2016, 12, 29)) if d.isoweekday() == 4]
+
     charts = list(
         ChartEntry.select(ChartEntry.date, ChartEntry.chart_id, ChartEntry.region_id)
         .distinct()
@@ -141,20 +142,23 @@ if __name__ == "__main__":
     regions = Region.select()
     for c in charts:
         for r in regions:
-            for d in daily_dates:
-                if c.interval == "daily":
-                    composite_key = "{}_{}_{}".format(
-                        chart_ids["{}_{}".format(c.url, c.interval)],
-                        region_ids[r.country_code],
-                        d,
+            if c.interval == "daily":
+                dates = daily_dates
+            elif c.interval == "weekly":
+                dates = weekly_dates
+            for d in dates:
+                composite_key = "{}_{}_{}".format(
+                    chart_ids["{}_{}".format(c.url, c.interval)],
+                    region_ids[r.country_code],
+                    d,
+                )
+                if composite_key not in composite_keys:
+                    url = "https://spotifycharts.com/{}/{}/{}/{}/download".format(
+                        c.url, r.country_code, c.interval, d
                     )
-                    if composite_key not in composite_keys:
-                        url = "https://spotifycharts.com/{}/{}/{}/{}/download".format(
-                            c.url, r.country_code, c.interval, d
-                        )
 
-                        if url not in blacklist_urls:
-                            urls.append((url, c.url, r.country_code, c.interval, d))
+                    if url not in blacklist_urls:
+                        urls.append((url, c.url, r.country_code, c.interval, d))
 
     reqs = 0
     datas = []
