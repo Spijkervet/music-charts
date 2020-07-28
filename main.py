@@ -1,18 +1,11 @@
-from peewee import *
-import datetime
-import json
-import pandas as pd
-from tqdm import tqdm
 import concurrent.futures
+import json
+from datetime import date
+from peewee import *
+from tqdm import tqdm
 from get_data import get_spotify_chart
 from model import *
-
-
-def batch(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx : min(ndx + n, l)]
-
+from utils import get_dates
 
 def populate_tables():
     # Populate charts
@@ -129,9 +122,6 @@ def add_chart_entries(data):
 
 if __name__ == "__main__":
     chart_ids, region_ids = populate_tables()
-
-    from utils import get_dates
-    from datetime import date
 
     start_date = date(2017, 1, 1)
     daily_dates = get_dates(start_date)
