@@ -144,9 +144,8 @@ if __name__ == "__main__":
     for c in tqdm(charts):
         composite_keys.add("{}_{}_{}".format(c["chart_id"], c["region_id"], c["date"]))
 
-    blacklist_urls = list(Blacklist.select(Blacklist.url))
-    print(blacklist_urls)
-
+    blacklist_urls = [b.url for b in Blacklist.select(Blacklist.url)]
+    
     urls = []
     charts = Chart.select()
     regions = Region.select()
@@ -182,7 +181,6 @@ if __name__ == "__main__":
                 if data:
                     datas.extend(data)
                 else:
-                    print("Added {} to blacklist".format(url))
                     add_blacklist(url[0])
 
                 if len(datas) > (200 * 200):
