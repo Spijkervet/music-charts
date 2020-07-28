@@ -26,6 +26,7 @@ class Region(BaseModel):
 class Artist(BaseModel):
     id = AutoField()
     name = CharField()
+    spotify_id = CharField(index=True, null=True)
 
 
 class Track(BaseModel):
