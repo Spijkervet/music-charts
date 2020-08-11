@@ -2,3 +2,4 @@ pandas
 requests
 peewee
 tqdm
+bs4

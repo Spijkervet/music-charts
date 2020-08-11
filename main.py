@@ -1,39 +1,58 @@
 import concurrent.futures
 import json
 from datetime import date
+import time
 from peewee import *
 from tqdm import tqdm
-from get_data import get_spotify_chart
+from get_data import (
+    get_spotify_chart,
+    get_kworb_chart,
+    build_urls,
+    get_chart_ids,
+    get_region_ids,
+)
 from model import *
 from utils import get_dates
 
+
 def populate_tables():
     # Populate charts
-    charts = {"Top 200": "regional", "Viral 50": "viral"}
-    intervals = ["daily", "weekly"]
-    chart_ids = {}
-    for k, chart in charts.items():
-        for interval in intervals:
-            try:
-                idx = Chart.get(name=k, interval=interval)
-            except:
-                print("Added Chart", k, chart, interval)
-                idx = Chart.insert(name=k, url=chart, interval=interval).execute()
+    charts = {
+        "Spotify Top 200 Daily": "regional_daily",
+        "Spotify Viral 50 Daily": "viral_daily",
+        "Spotify Top 200 Weekly": "regional_weekly",
+        "Spotify Viral 50 Weekly": "viral_weekly",
+        "iTunes Top 100": "itunes100",
+    }
 
-            mapping_id = "{}_{}".format(chart, interval)
-            chart_ids[mapping_id] = idx
+    for k, chart in charts.items():
+        try:
+            idx = Chart.get(name=k)
+        except:
+            print("Added Chart", k, chart)
+            idx = Chart.insert(name=k, url=chart).execute()
 
     # Populate regions
-    region_ids = {}
     with open("./spotify_regions.json", "r") as f:
-        spotify_regions = json.load(f)
-        for k, v in spotify_regions.items():
+        regions = json.load(f)
+        for k, v in regions.items():
             try:
                 idx = Region.get(country_code=k)
             except:
                 idx = Region.insert(country_code=k, name=v).execute()
-            region_ids[k] = idx
-    return chart_ids, region_ids
+
+    regions = get_itunes_regions()
+    for k, v in regions.items():
+        try:
+            idx = Region.get(country_code=k)
+        except:
+            idx = Region.insert(country_code=k, name=v).execute()
+
+
+def get_itunes_regions():
+    with open("./itunes_regions.json", "r") as f:
+        regions = json.load(f)
+    return regions
 
 
 def add_track(name, spotify_id):
@@ -53,138 +72,101 @@ def add_blacklist(url):
 
 
 def add_artists(data):
-    data = {t.artist: t for t in data}
-    existing_ids = set([r.name for r in Artist.select(Artist.name)])
+    t0 = time.time()
+    artists = []
+    added = []
+    for d in data:
+        if d.artist not in added:
+            added.append(d.artist)
+            artists.append({"name": d.artist})
 
-    add_ids = set(data.keys()) - existing_ids
-    data = [{"name": t.artist} for k, t in data.items() if t.artist in add_ids]
-    print("Adding {} artists".format(len(data)))
     with db.atomic():
-        ids = Artist.insert_many(data).on_conflict("ignore").execute()
-    return ids
+        Artist.insert_many(artists).on_conflict("ignore").execute()
+    print("Artists", time.time() - t0)
 
 
 def add_tracks(data):
-    tracks = {t.spotify_id: t for t in data}
-    existing_ids = set([r.spotify_id for r in Track.select(Track.spotify_id)])
+    t0 = time.time()
+    tracks = []
+    added = []
+    artist_name_id = {a.name: a.id for a in Artist.select(Artist.name, Artist.id)}
+    for d in data:
+        key = d.artist + d.name
+        if key not in added:
+            added.append(key)
+            tracks.append({"name": d.name, "artist_id": artist_name_id[d.artist], "spotify_id": d.spotify_id})
 
-    add_ids = set(tracks.keys()) - existing_ids
-    tracks = [
-        {
-            "name": t.name,
-            "artist_id": Artist.get(name=t.artist),
-            "spotify_id": t.spotify_id,
-        }
-        for k, t in tracks.items()
-        if t.spotify_id in add_ids
-    ]
-    print("Adding {} tracks".format(len(tracks)))
     with db.atomic():
         Track.insert_many(tracks).on_conflict("ignore").execute()
-
-
-def add_chart_entry(date, position, streams, chart_id, region_id, track_id):
-    # try:
-    #     chart_entry_id = ChartEntry.get(date=date, chart_id=chart_id, region_id=region_id, track_id=track_id)
-    # except:
-
-    chart_entry_id = ChartEntry.create(
-        date=date,
-        position=position,
-        streams=streams,
-        chart_id=chart_id,
-        region_id=region_id,
-        track_id=track_id,
-    )
-    return chart_entry_id
+    print("Tracks", time.time() - t0)
 
 
 def add_chart_entries(data):
-    existing_tracks = {
-        r.spotify_id: r.id for r in Track.select(Track.id, Track.spotify_id)
-    }
+    t0 = time.time()
+    chart_ids = get_chart_ids()
+    region_ids = get_region_ids()
+
     data = [
         {
             "date": d.date,
             "position": d.position,
             "streams": d.streams,
-            "chart_id": chart_ids["{}_{}".format(d.chart, d.interval)],
+            "chart_id": chart_ids[d.chart],
             "region_id": region_ids[d.region],
-            "track_id": existing_tracks[d.spotify_id],
+            "track_id": "{}_{}".format(d.artist, d.name),
         }
         for d in data
-        if d.spotify_id is not None
     ]
-    print("Adding {} chart entries".format(len(data)))
     with db.atomic():
-        ChartEntry.insert_many(data).on_conflict("ignore").execute()
+        ChartEntry.insert_many(data).execute()
+    print("Charts", time.time() - t0)
 
 
 if __name__ == "__main__":
-    chart_ids, region_ids = populate_tables()
-
-    daily_dates = get_dates(date(2017, 1, 1))
-    weekly_dates = [d for d in get_dates(date(2016, 12, 29)) if d.isoweekday() == 4]
-
-    charts = list(
-        ChartEntry.select(ChartEntry.date, ChartEntry.chart_id, ChartEntry.region_id)
-        .distinct()
-        .dicts()
-    )
-    composite_keys = set()
-    for c in tqdm(charts):
-        composite_keys.add("{}_{}_{}".format(c["chart_id"], c["region_id"], c["date"]))
-
-    blacklist_urls = [b.url for b in Blacklist.select(Blacklist.url)]
-    
+    populate_tables()
+    dates = get_dates(date(2013, 8, 13))
     urls = []
-    charts = Chart.select()
-    regions = Region.select()
-    for c in charts:
-        for r in regions:
-            if c.interval == "daily":
-                dates = daily_dates
-            elif c.interval == "weekly":
-                dates = weekly_dates
-            for d in dates:
-                composite_key = "{}_{}_{}".format(
-                    chart_ids["{}_{}".format(c.url, c.interval)],
-                    region_ids[r.country_code],
-                    d,
+    for r, _ in get_itunes_regions().items():
+        for d in dates:
+            if r == "us":
+                r = ""
+            urls.append(
+                "https://kworb.net/pop{}/archive/{}.html".format(
+                    r, str(d).replace("-", "")
                 )
-                if composite_key not in composite_keys:
-                    url = "https://spotifycharts.com/{}/{}/{}/{}/download".format(
-                        c.url, r.country_code, c.interval, d
-                    )
+            )
 
-                    if url not in blacklist_urls:
-                        urls.append((url, c.url, r.country_code, c.interval, d))
-
+    f = get_kworb_chart
     reqs = 0
     datas = []
-    print("Scraping {} URLs".format(len(urls)))
-    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
-        # Start the load operations and mark each future with its URL
-        future_to_url = {
-            executor.submit(get_spotify_chart, url, 60): url for url in urls
-        }
-        for future in concurrent.futures.as_completed(future_to_url):
-            url = future_to_url[future]
-            try:
-                data = future.result()
-                if data:
-                    datas.extend(data)
-                else:
-                    add_blacklist(url[0])
 
-                if len(datas) > (200 * 200):
-                    id_name = {}
-                    new_ids = []
-                    add_artists(datas)
-                    add_tracks(datas)
-                    add_chart_entries(datas)
-                    datas = []
-            except Exception as e:
-                print("Exception", e)
+    ## Spotify
+    # urls = build_urls()
+    # print("Scraping {} URLs".format(len(urls)))
+    # f = get_spotify_chart
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+        future_to_url = {executor.submit(f, url): url for url in urls}
+        for future in concurrent.futures.as_completed(future_to_url):
+            # try:
+            url = future_to_url[future]
+            data = future.result()
+            if data:
+                datas.extend(data)
+            else:
+                add_blacklist(url[0])
+
+            if len(datas) > (200 * 200):
+                add_artists(datas)
+                add_tracks(datas)
+                add_chart_entries(datas)
+                datas = []
+            # except Exception as e:
+            #     print(e)
+            #     pass
             reqs += 1
             print(reqs, "/", len(urls))
+
+        # add remainder
+        add_artists(datas)
+        add_tracks(datas)
+        add_chart_entries(datas)

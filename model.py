@@ -13,7 +13,6 @@ class Chart(BaseModel):
     id = AutoField()
     name = CharField()
     url = CharField()
-    interval = CharField()
     genre = CharField(null=True)
 
 
@@ -25,25 +24,25 @@ class Region(BaseModel):
 
 class Artist(BaseModel):
     id = AutoField()
-    name = CharField()
-    spotify_id = CharField(index=True, null=True)
+    name = CharField(unique=True)
+    spotify_id = CharField(null=True)
 
 
 class Track(BaseModel):
     id = AutoField()
     name = CharField()
-    spotify_id = CharField(index=True, unique=True)
     artist_id = ForeignKeyField(Artist)
+    spotify_id = CharField(index=True, unique=True, null=True)
 
 
 class ChartEntry(BaseModel):
     id = AutoField()
-    date = DateField()
+    date = DateTimeField()
     position = IntegerField()
     streams = IntegerField()
     chart_id = ForeignKeyField(Chart)
     region_id = ForeignKeyField(Region)
-    track_id = ForeignKeyField(Track)
+    track_id = CharField() # ForeignKeyField(Track)
 
 class Blacklist(BaseModel):
     id = AutoField()
