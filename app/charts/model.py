@@ -1,7 +1,14 @@
+import pymysql
 from peewee import *
 
+conn = pymysql.connect(host='mysql', user='root', password='root')
+conn.cursor().execute('CREATE DATABASE IF NOT EXISTS charts')
+conn.close()
 
-db = SqliteDatabase("spotify.db")
+# db = SqliteDatabase("listings.db")
+# Connect to a MySQL database on network.
+db = MySQLDatabase('charts', user='root', password='root',
+                         host='mysql', port=3306)
 
 
 class BaseModel(Model):
@@ -42,12 +49,24 @@ class ChartEntry(BaseModel):
     streams = IntegerField()
     chart_id = ForeignKeyField(Chart)
     region_id = ForeignKeyField(Region)
-    track_id = CharField() # ForeignKeyField(Track)
+    track_id = CharField() # ForeignKeyField(T
+
+
+class HistoricalEntry(BaseModel):
+    id = AutoField()
+    date = DateTimeField()
+    position = IntegerField()
+    name = CharField()
+    artist = CharField()
+    streams = IntegerField()
+    spotify_id = CharField(null=True)
+    chart_id = ForeignKeyField(Chart)
+    region_id = ForeignKeyField(Region)
 
 class Blacklist(BaseModel):
     id = AutoField()
     url = CharField()
 
 db.connect()
-db.create_tables([Chart, Region, Track, Artist, ChartEntry, Blacklist])
+db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist])
 

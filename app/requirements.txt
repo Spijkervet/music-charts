@@ -1,0 +1,4 @@
+peewee
+bs4
+scrapy
+pymysql
