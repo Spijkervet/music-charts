@@ -27,7 +27,7 @@ services:
     restart: always
   mysql:
     image: mysql:latest
-    container_name: mysql
+    container_name: charts_mysql
     environment:
       MYSQL_USER: user
       MYSQL_PASSWORD: user
@@ -39,7 +39,6 @@ services:
       - mysql-data:/var/lib/mysql
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: pma
     links:
       - mysql
     environment:

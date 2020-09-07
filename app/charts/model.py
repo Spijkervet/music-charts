@@ -1,14 +1,14 @@
 import pymysql
 from peewee import *
 
-conn = pymysql.connect(host='mysql', user='root', password='root')
+conn = pymysql.connect(host='charts_mysql', user='root', password='root')
 conn.cursor().execute('CREATE DATABASE IF NOT EXISTS charts')
 conn.close()
 
 # db = SqliteDatabase("listings.db")
 # Connect to a MySQL database on network.
 db = MySQLDatabase('charts', user='root', password='root',
-                         host='mysql', port=3306)
+                         host='charts_mysql', port=3306)
 
 
 class BaseModel(Model):
