@@ -42,7 +42,7 @@ services:
     links:
       - mysql
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: charts_mysql
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
       UPLOAD_LIMIT: 9000000000
