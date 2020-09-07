@@ -1,12 +1,7 @@
-import requests
 import csv
 import json
 from datetime import date, datetime, timedelta
 from charts.model import Chart, Region
-
-from tqdm import tqdm
-from bs4 import BeautifulSoup
-
 
 def populate_tables():
     # Populate charts
