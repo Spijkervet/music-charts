@@ -15,12 +15,17 @@ class BaseModel(Model):
     class Meta:
         database = db
 
+class Vendor(BaseModel):
+    id = AutoField()
+    name = CharField(unique=True)
 
 class Chart(BaseModel):
     id = AutoField()
     name = CharField()
-    url = CharField()
+    identifier = CharField()
+    interval = CharField()
     genre = CharField(null=True)
+    vendor_id = ForeignKeyField(Vendor, backref='chart')
 
 
 class Region(BaseModel):
@@ -68,5 +73,5 @@ class Blacklist(BaseModel):
     url = CharField()
 
 db.connect()
-db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist])
+db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist, Vendor])
 

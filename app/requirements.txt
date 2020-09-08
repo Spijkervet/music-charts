@@ -2,3 +2,4 @@ peewee
 bs4
 scrapy
 pymysql
+scrapy-splash

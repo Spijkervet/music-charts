@@ -14,7 +14,7 @@ class ChartsPipeline:
 
     def process_item(self, item, spider):
         add_to_items_buffer(item)
-        if get_items_buffer_len() > 10000:
+        if get_items_buffer_len() >= 10000:
             with db.atomic():
                 HistoricalEntry.insert_many(get_items_buffer()).execute()
             empty_items_buffer()

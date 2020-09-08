@@ -1,0 +1,32 @@
+[
+    {
+        "name": "Spotify Top 200 Daily",
+        "identifier": "regional",
+        "interval": "daily",
+        "vendor": "Spotify"
+    },
+    {
+        "name": "Spotify Viral 50 Daily",
+        "identifier": "viral",
+        "interval": "daily",
+        "vendor": "Spotify"
+    },
+    {
+        "name": "Spotify Top 200 Weekly",
+        "identifier": "regional",
+        "interval": "weekly",
+        "vendor": "Spotify"
+    },
+    {
+        "name": "Spotify Viral 50 Weekly",
+        "identifier": "viral",
+        "interval": "weekly",
+        "vendor": "Spotify"
+    },
+    {
+        "name": "iTunes Top 100",
+        "identifier": "itunes100",
+        "interval": "hourly",
+        "vendor": "Apple"
+    }
+]

@@ -1,24 +1,28 @@
 import csv
 import json
 from datetime import date, datetime, timedelta
-from charts.model import Chart, Region
+from charts.model import Chart, Region, Vendor
+
+def get_add_vendor(name):
+    try:
+        vendor_id = Vendor.get(name=name)
+    except:
+        print("Added Vendor", name)
+        vendor_id = Vendor.insert(name=name).execute()
+    return vendor_id
 
 def populate_tables():
     # Populate charts
-    charts = {
-        "Spotify Top 200 Daily": "regional_daily",
-        "Spotify Viral 50 Daily": "viral_daily",
-        "Spotify Top 200 Weekly": "regional_weekly",
-        "Spotify Viral 50 Weekly": "viral_weekly",
-        "iTunes Top 100": "itunes100",
-    }
-
-    for k, chart in charts.items():
+    with open("./charts.json", "r") as f:
+        charts = json.load(f)
+    
+    for chart in charts:
         try:
-            idx = Chart.get(name=k)
+            idx = Chart.get(name=chart["name"])
         except:
-            print("Added Chart", k, chart)
-            idx = Chart.insert(name=k, url=chart).execute()
+            print("Added Chart", chart["name"])
+            vendor_id = get_add_vendor(chart["vendor"])
+            idx = Chart.insert(name=chart["name"], identifier=chart["identifier"], interval=chart["interval"], vendor_id=vendor_id).execute()
 
     # Populate regions
     with open("./spotify_regions.json", "r") as f:
@@ -46,7 +50,7 @@ def get_itunes_regions():
 def get_chart_ids():
     chart_ids = {}
     for c in Chart.select():
-        chart_ids[c.url] = c.id
+        chart_ids["{}_{}".format(c.identifier, c.interval)] = c.id
     return chart_ids
 
 def get_region_ids():
