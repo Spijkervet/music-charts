@@ -1,14 +1,17 @@
 import pymysql
 from peewee import *
 
-conn = pymysql.connect(host='charts_mysql', user='root', password='root')
+
+HOST = "localhost" # "charts_mysql"
+
+conn = pymysql.connect(host=HOST, user='root', password='root')
 conn.cursor().execute('CREATE DATABASE IF NOT EXISTS charts')
 conn.close()
 
 # db = SqliteDatabase("listings.db")
 # Connect to a MySQL database on network.
 db = MySQLDatabase('charts', user='root', password='root',
-                         host='charts_mysql', port=3306)
+                         host=HOST, port=3306)
 
 
 class BaseModel(Model):
@@ -72,6 +75,22 @@ class Blacklist(BaseModel):
     id = AutoField()
     url = CharField()
 
+class AudioFeatures(BaseModel):
+    spotify_id = CharField(primary_key=True)
+    danceability = FloatField()
+    energy = FloatField()
+    key = IntegerField()
+    loudness = FloatField()
+    mode = IntegerField()
+    speechiness = FloatField()
+    acousticness = FloatField()
+    instrumentalness = FloatField()
+    liveness = FloatField()
+    valence = FloatField()
+    tempo = FloatField()
+    duration_ms = IntegerField()
+    time_signature = IntegerField()
+
 db.connect()
-db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist, Vendor])
+db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist, Vendor, AudioFeatures])
 
