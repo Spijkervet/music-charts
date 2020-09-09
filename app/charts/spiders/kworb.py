@@ -11,7 +11,7 @@ class KworbSpider(scrapy.Spider):
     name = "kworb"
 
     timezone_hours = 4 # EDT - UTC = +4
-    chart = "itunes100"
+    chart = "itunes100_hourly"
 
 
     def start_requests(self):
