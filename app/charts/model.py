@@ -91,6 +91,32 @@ class AudioFeatures(BaseModel):
     duration_ms = IntegerField()
     time_signature = IntegerField()
 
+class AudioAnalysis(BaseModel):
+    spotify_id = CharField(primary_key=True)
+    num_samples = IntegerField()
+    duration = FloatField()
+    analysis_sample_rate = IntegerField()
+    analysis_channels = IntegerField()
+    end_of_fade_in = FloatField()
+    start_of_fade_out = FloatField()
+    loudness = FloatField()
+    tempo = FloatField()
+    tempo_confidence = FloatField()
+    time_signature = IntegerField()
+    time_signature_confidence = FloatField()
+    key = IntegerField()
+    key_confidence = FloatField()
+    mode = IntegerField()
+    mode_confidence = FloatField()
+    bars = TextField()
+    beats = TextField()
+    sections = TextField()
+    segments = TextField()
+    tatums = TextField()
+    analyzer_version = CharField()
+    timestamp = TimestampField()
+
+
 db.connect()
-db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist, Vendor, AudioFeatures])
+db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist, Vendor, AudioFeatures, AudioAnalysis])
 
