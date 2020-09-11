@@ -79,7 +79,7 @@ class SpotifySpider(scrapy.Spider):
             composite_keys.add("{}_{}_{}".format(c["chart_id"], c["region_id"], c["date"].date()))
 
         urls = []
-        daily_dates = get_dates(date(2017, 1, 1))
+        daily_dates = get_dates(date(2020, 1, 1))
         weekly_dates = [d for d in get_dates(date(2016, 12, 23)) if d.isoweekday() == 5]
         blacklist_urls = [b.url for b in Blacklist.select(Blacklist.url)]
         dates = None

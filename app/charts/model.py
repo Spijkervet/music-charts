@@ -2,25 +2,26 @@ import pymysql
 from peewee import *
 
 
-HOST = "localhost"
+HOST = "localhost"  # "charts_mysql"
 
-conn = pymysql.connect(host=HOST, user='root', password='root')
-conn.cursor().execute('CREATE DATABASE IF NOT EXISTS charts')
+conn = pymysql.connect(host=HOST, user="root", password="root")
+conn.cursor().execute("CREATE DATABASE IF NOT EXISTS charts")
 conn.close()
 
 # db = SqliteDatabase("listings.db")
 # Connect to a MySQL database on network.
-db = MySQLDatabase('charts', user='root', password='root',
-                         host=HOST, port=3306)
+db = MySQLDatabase("charts", user="root", password="root", host=HOST, port=3306)
 
 
 class BaseModel(Model):
     class Meta:
         database = db
 
+
 class Vendor(BaseModel):
     id = AutoField()
     name = CharField(unique=True)
+
 
 class Chart(BaseModel):
     id = AutoField()
@@ -28,7 +29,7 @@ class Chart(BaseModel):
     identifier = CharField()
     interval = CharField()
     genre = CharField(null=True)
-    vendor_id = ForeignKeyField(Vendor, backref='chart')
+    vendor_id = ForeignKeyField(Vendor, backref="chart")
 
 
 class Region(BaseModel):
@@ -46,7 +47,10 @@ class Artist(BaseModel):
 class Track(BaseModel):
     id = AutoField()
     name = CharField()
-    artist_id = ForeignKeyField(Artist)
+    duration_ms = IntegerField()
+    explicit = BooleanField()
+    track_number = IntegerField()
+    preview_url = CharField()
     spotify_id = CharField(index=True, unique=True, null=True)
 
 
@@ -57,7 +61,7 @@ class ChartEntry(BaseModel):
     streams = IntegerField()
     chart_id = ForeignKeyField(Chart)
     region_id = ForeignKeyField(Region)
-    track_id = CharField() # ForeignKeyField(T
+    track_id = ForeignKeyField(Track)
 
 
 class HistoricalEntry(BaseModel):
@@ -71,9 +75,11 @@ class HistoricalEntry(BaseModel):
     chart_id = ForeignKeyField(Chart)
     region_id = ForeignKeyField(Region)
 
+
 class Blacklist(BaseModel):
     id = AutoField()
     url = CharField()
+
 
 class AudioFeatures(BaseModel):
     spotify_id = CharField(primary_key=True)
@@ -90,6 +96,7 @@ class AudioFeatures(BaseModel):
     tempo = FloatField()
     duration_ms = IntegerField()
     time_signature = IntegerField()
+
 
 class AudioAnalysis(BaseModel):
     spotify_id = CharField(primary_key=True)
@@ -116,8 +123,10 @@ class AudioAnalysis(BaseModel):
     analyzer_version = CharField()
     timestamp = TimestampField()
 
+
 class SpotifyUsers(BaseModel):
     spotify_id = CharField(primary_key=True)
+
 
 class SpotifyPlaylist(BaseModel):
     spotify_id = CharField()
@@ -128,6 +137,7 @@ class SpotifyPlaylist(BaseModel):
     region_id = ForeignKeyField(Region, null=True)
     user_spotify_id = ForeignKeyField(SpotifyUsers)
 
+
 class PlaylistTracks(BaseModel):
     id = AutoField()
     track_id = CharField()
@@ -136,7 +146,29 @@ class PlaylistTracks(BaseModel):
     playlist_spotify_id = ForeignKeyField(SpotifyPlaylist)
 
 
+class TrackArtists(BaseModel):
+    id = AutoField()
+    track_id = IntegerField()
+    artist_id = IntegerField()
+
 
 db.connect()
-db.create_tables([Chart, Region, Track, Artist, ChartEntry, HistoricalEntry, Blacklist, Vendor, AudioFeatures, AudioAnalysis, SpotifyPlaylist, SpotifyUsers, PlaylistTracks])
+db.create_tables(
+    [
+        Chart,
+        Region,
+        Track,
+        Artist,
+        ChartEntry,
+        HistoricalEntry,
+        Blacklist,
+        Vendor,
+        AudioFeatures,
+        AudioAnalysis,
+        SpotifyPlaylist,
+        SpotifyUsers,
+        PlaylistTracks,
+        TrackArtists,
+    ]
+)
 
