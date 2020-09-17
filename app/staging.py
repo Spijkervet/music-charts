@@ -24,5 +24,3 @@ query = """
 """
 cursor = db.execute_sql(query)
 
-
-# add artists

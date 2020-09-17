@@ -48,7 +48,7 @@ for user in users:
                         # if it still exists on Spotify, add it:
                         if track["track"]:
                             ds.append({
-                                "track_id": track["track"]["id"],
+                                "track_spotify_id": track["track"]["id"],
                                 "position": idx,
                                 "added_at": track["added_at"],
                                 "playlist_spotify_id": playlist_id
@@ -59,7 +59,7 @@ for user in users:
                         tracks = None
                 
                 with db.atomic():
-                    PlaylistTracks.insert_many(ds).execute()
+                    StagingPlaylistTracks.insert_many(ds).execute()
 
         if playlists['next']:
             playlists = spotify.next(playlists)

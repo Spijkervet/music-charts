@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+{{ super() }}
+{% endblock %}
+{% block content %}
+<h1>{{ chart.name }}</h1>
+<h2>{{ date.strftime('%Y-%m-%d') }}</h2>
+<h3>{{ region.name }}</h3>
+<table>
+    <thead>
+        <th>Position</th>
+        <th>Title</th>
+        <th>Artist</th>
+        <th>Streams</th>
+    </thead>
+    <tbody>
+        {% for item in tracks %}
+        <tr>
+            <td>{{ item.position }}</td>
+            <td>
+                <a href="https://open.spotify.com/track/{{ item.track_id.spotify_id }}" , target="_blank">
+                    {{ item.track_id.name }}
+                </a>
+            </td>
+            <td>
+                <a href="https://open.spotify.com/artist/{{ item.track_id.trackartists.artist_id.spotify_id }}" , target="_blank">
+                    {{ item.track_id.trackartists.artist_id.name }}
+                </a>
+            </td>
+            <td>{{ '{0:,}'.format(item.streams | int) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+{% endblock %}

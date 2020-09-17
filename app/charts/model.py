@@ -59,9 +59,9 @@ class ChartEntry(BaseModel):
     date = DateTimeField()
     position = IntegerField()
     streams = IntegerField()
-    chart_id = ForeignKeyField(Chart)
-    region_id = ForeignKeyField(Region)
-    track_id = ForeignKeyField(Track)
+    chart_id = ForeignKeyField(Chart, backref='chart')
+    region_id = ForeignKeyField(Region, backref='region')
+    track_id = ForeignKeyField(Track, backref='track')
 
 
 class HistoricalEntry(BaseModel):
@@ -129,6 +129,7 @@ class SpotifyUsers(BaseModel):
 
 
 class SpotifyPlaylist(BaseModel):
+    id = AutoField()
     spotify_id = CharField()
     snapshot_id = CharField()
     name = CharField()
@@ -140,16 +141,24 @@ class SpotifyPlaylist(BaseModel):
 
 class PlaylistTracks(BaseModel):
     id = AutoField()
-    track_id = CharField()
     position = IntegerField()
     added_at = DateTimeField()
+    track_id = ForeignKeyField(Track)
     playlist_spotify_id = ForeignKeyField(SpotifyPlaylist)
 
 
 class TrackArtists(BaseModel):
     id = AutoField()
-    track_id = IntegerField()
-    artist_id = IntegerField()
+    track_id = ForeignKeyField(Track, backref="track")
+    artist_id = ForeignKeyField(Artist, backref="artist")
+
+
+class StagingPlaylistTracks(BaseModel):
+    id = AutoField()
+    track_spotify_id = CharField()
+    position = IntegerField()
+    added_at = DateTimeField()
+    playlist_spotify_id = ForeignKeyField(SpotifyPlaylist)
 
 
 db.connect()
@@ -169,6 +178,7 @@ db.create_tables(
         SpotifyUsers,
         PlaylistTracks,
         TrackArtists,
+        StagingPlaylistTracks
     ]
 )
 

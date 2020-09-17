@@ -4,12 +4,12 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 from charts.model import *
+from spotify_utils import add_track
 
 with open("./spotify_users.json") as f:
     users = json.load(f)
 
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-
 
 for region in Region(Region.id).select():
     try:
@@ -50,13 +50,15 @@ for region in Region(Region.id).select():
 
                 ## playlist tracks
                 tracks = playlist_details["tracks"]
+
+                add_all_tracks = []
                 ds = []
                 while tracks:
                     for idx, track in enumerate(tracks["items"]):
                         # if it still exists on Spotify, add it:
                         if track["track"]:
                             ds.append({
-                                "track_id": track["track"]["id"],
+                                "track_spotify_id": track["track"]["id"],
                                 "position": idx,
                                 "added_at": track["added_at"],
                                 "playlist_spotify_id": playlist_id
@@ -67,7 +69,7 @@ for region in Region(Region.id).select():
                         tracks = None
                 
                 with db.atomic():
-                    PlaylistTracks.insert_many(ds).execute()
+                    StagingPlaylistTracks.insert_many(ds).execute()
 
         if playlists['next']:
             playlists = spotify.next(playlists)

@@ -3,28 +3,11 @@ services:
   scraper:
     build: ./
     links:
-      - splash
       - mysql
     volumes:
       - ./app:/app
-  tor-privoxy:
-    image: zeta0/alpine-tor:latest
-    ports:
-      - 8118:8118
-    environment:
-      tors: 40
-      privoxy: 1
-      max_circuit_dirtiness: 20
-    restart: always
-  splash:
-    image: scrapinghub/splash
-    ports:
-      - 8050:8050
-    volumes:
-      - ./proxy-profiles:/etc/splash/proxy-profiles:ro
-    links:
-      - tor-privoxy
-    restart: always
+    networks:
+      - charts
   mysql:
     image: mysql:latest
     container_name: charts_mysql
@@ -33,6 +16,8 @@ services:
       MYSQL_PASSWORD: user
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: default_schema
+    networks:
+      - charts
     ports:
       - 3306:3306
     volumes:
@@ -49,6 +34,14 @@ services:
     restart: always
     ports:
       - 8183:80
+    networks:
+      - charts
 
 volumes:
   mysql-data:
+
+
+
+networks:
+  charts:
+    external: true
